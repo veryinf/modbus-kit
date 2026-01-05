@@ -13,15 +13,15 @@ const (
 	PointTypeInputRegister   PointType = "input_register"
 )
 
-// PointWriteEvent 写入事件回调函数类型
-type PointWriteEvent struct {
+// Point 类型
+type Point struct {
 	Address uint16 // 地址
 	Value   uint16
 	Type    PointType
 }
 
 // PointWriteCallback 事件回调函数类型
-type PointWriteCallback func(event PointWriteEvent)
+type PointWriteCallback func(event Point)
 
 // MemoryDataStore 基于内存的数据存储实现
 type MemoryDataStore struct {
@@ -56,7 +56,7 @@ func (m *MemoryDataStore) triggerWriteEvent(address uint16, value uint16, valueT
 	if len(m.eventWriteCallbacks) == 0 {
 		return
 	}
-	event := PointWriteEvent{
+	event := Point{
 		Address: address,
 		Value:   value,
 		Type:    valueType,
@@ -114,4 +114,50 @@ func (m *MemoryDataStore) Write(pointType PointType, address uint16, value uint1
 		m.inputRegisters[address] = value
 	}
 	m.triggerWriteEvent(address, value, pointType)
+}
+
+func (m *MemoryDataStore) GetAllPoints() []Point {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	points := make([]Point, 0)
+
+	for address, value := range m.coils {
+		point := Point{
+			Address: address,
+			Value:   0,
+			Type:    PointTypeCoil,
+		}
+		if value {
+			point.Value = 1
+		}
+		points = append(points, point)
+	}
+
+	for address, value := range m.discreteInputs {
+		point := Point{
+			Address: address,
+			Value:   0,
+			Type:    PointTypeDiscreteInput,
+		}
+		if value {
+			point.Value = 1
+		}
+		points = append(points, point)
+	}
+	for address, value := range m.holdingRegisters {
+		points = append(points, Point{
+			Address: address,
+			Value:   value,
+			Type:    PointTypeHoldingRegister,
+		})
+	}
+	for address, value := range m.inputRegisters {
+		points = append(points, Point{
+			Address: address,
+			Value:   value,
+			Type:    PointTypeInputRegister,
+		})
+	}
+
+	return points
 }
