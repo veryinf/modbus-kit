@@ -413,7 +413,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you have any questions or suggestions, please contact us through:
 
 - Create an [Issue](https://github.com/yourusername/modbus-kit/issues)
-- Email: your.email@example.com
 
 ## Acknowledgments
 
