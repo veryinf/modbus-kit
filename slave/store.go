@@ -1,6 +1,7 @@
 package slave
 
 import (
+	"reflect"
 	"sync"
 )
 
@@ -51,11 +52,30 @@ func (m *MemoryDataStore) AddWriteEventCallback(callback PointWriteCallback) {
 	m.eventWriteCallbacks = append(m.eventWriteCallbacks, callback)
 }
 
+// RemoveWriteEventCallback 移除事件回调函数
+func (m *MemoryDataStore) RemoveWriteEventCallback(callback PointWriteCallback) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	for i, cb := range m.eventWriteCallbacks {
+		if isCallbackEqual(cb, callback) {
+			// 从切片中移除回调函数
+			m.eventWriteCallbacks = append(m.eventWriteCallbacks[:i], m.eventWriteCallbacks[i+1:]...)
+			break
+		}
+	}
+}
+
 // triggerWriteEvent 触发事件回调
 func (m *MemoryDataStore) triggerWriteEvent(address uint16, value uint16, valueType PointType) {
+	m.mu.RLock()
+
+	// 检查是否有回调函数
 	if len(m.eventWriteCallbacks) == 0 {
+		m.mu.RUnlock()
 		return
 	}
+
 	event := Point{
 		Address: address,
 		Value:   value,
@@ -63,7 +83,6 @@ func (m *MemoryDataStore) triggerWriteEvent(address uint16, value uint16, valueT
 	}
 
 	// 创建回调函数副本以避免在锁内执行回调
-	m.mu.RLock()
 	callbacks := make([]PointWriteCallback, len(m.eventWriteCallbacks))
 	copy(callbacks, m.eventWriteCallbacks)
 	m.mu.RUnlock()
@@ -71,6 +90,11 @@ func (m *MemoryDataStore) triggerWriteEvent(address uint16, value uint16, valueT
 	for _, callback := range callbacks {
 		callback(event)
 	}
+}
+
+// isCallbackEqual 比较两个回调函数是否相等
+func isCallbackEqual(a, b PointWriteCallback) bool {
+	return reflect.ValueOf(a).Pointer() == reflect.ValueOf(b).Pointer()
 }
 
 // Read 根据类型直接读取单个值
@@ -101,7 +125,6 @@ func (m *MemoryDataStore) Read(pointType PointType, address uint16) uint16 {
 // Write 根据类型直接写入单个值
 func (m *MemoryDataStore) Write(pointType PointType, address uint16, value uint16) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
 
 	switch pointType {
 	case PointTypeCoil:
@@ -113,6 +136,7 @@ func (m *MemoryDataStore) Write(pointType PointType, address uint16, value uint1
 	case PointTypeInputRegister:
 		m.inputRegisters[address] = value
 	}
+	m.mu.Unlock()
 	m.triggerWriteEvent(address, value, pointType)
 }
 
