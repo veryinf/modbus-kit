@@ -101,7 +101,8 @@ func (t *TCPClient) close() (err error) {
 
 // flush 清空当前连接中阻塞无效的数据
 func (t *TCPClient) drain() {
-	if err := t.conn.SetReadDeadline(time.Now()); err != nil {
+	//time.Now().Add(500 * time.Microsecond)
+	if err := t.conn.SetReadDeadline(time.Now().Add(500 * time.Microsecond)); err != nil {
 		return
 	}
 	buf := make([]byte, 1024)

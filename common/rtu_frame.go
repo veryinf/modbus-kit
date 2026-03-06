@@ -36,13 +36,13 @@ func (f *RTUFrame) ToBytes() []byte {
 
 func (f *RTUFrame) ReadFromConn(requestData []byte, conn net.Conn) error {
 	bytesToRead := calculateResponseLength(requestData)
-	if bytesToRead > tcpMaxLength {
-		return fmt.Errorf("modbus: response length '%v' must not greater than '%v'", bytesToRead, tcpMaxLength)
+	if bytesToRead > rtuMaxSize {
+		return fmt.Errorf("modbus: response length '%v' must not greater than '%v'", bytesToRead, rtuMaxSize)
 	}
-	delay := calculateDelay(0, len(requestData)+bytesToRead)
-	time.Sleep(delay)
+	//delay := calculateDelay(0, len(requestData)+bytesToRead)
+	//time.Sleep(delay)
 
-	var data [tcpMaxLength]byte
+	var data [rtuMaxSize]byte
 	if _, err := io.ReadFull(conn, data[:2]); err != nil {
 		return err
 	}
@@ -139,7 +139,7 @@ func calculateResponseLength(requestData []byte) int {
 		FuncCodeReadHoldingRegisters,
 		FuncCodeReadWriteMultipleRegisters:
 		count := int(binary.BigEndian.Uint16(requestData[4:]))
-		length += 1 + count*2
+		length += (1 + count*2)
 	case FuncCodeWriteSingleCoil,
 		FuncCodeWriteMultipleCoils,
 		FuncCodeWriteSingleRegister,
