@@ -29,13 +29,13 @@ func NewRegisters(buffer []byte) []*Register {
 	return registers
 }
 
-func RegistersToBytes(registers []*Register) *[]byte {
+func RegistersToBytes(registers []*Register) []byte {
 	value := make([]byte, len(registers)*2)
 	for i := 0; i < len(registers); i++ {
 		value[i*2] = registers[i].byte1
 		value[i*2+1] = registers[i].byte2
 	}
-	return &value
+	return value
 }
 
 func (r *Register) ToHexString() string {

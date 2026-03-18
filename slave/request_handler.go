@@ -2,6 +2,7 @@ package slave
 
 import (
 	"encoding/binary"
+
 	"github.com/veryinf/modbus-kit/common"
 )
 
@@ -276,7 +277,8 @@ func (s *RequestHandler) handleWriteMultipleCoils(request *common.ProtocolDataUn
 	bitVector.Load(request.Data[5 : 5+byteCount])
 	for i := uint16(0); i < quantity; i++ {
 		var val uint16 = 0
-		if bitVector.Get(uint(i)) {
+		var b, _ = bitVector.Get(uint(i))
+		if b {
 			val = 1
 		}
 		s.store.Write(PointTypeCoil, address+i, val)

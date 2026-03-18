@@ -1,5 +1,7 @@
 package common
 
+import "fmt"
+
 // BitVector 是一个位向量结构，用于高效存储和操作大量布尔值
 type BitVector struct {
 	bits []uint64
@@ -31,9 +33,9 @@ func NewBitVectorFromBooleans(values []bool) *BitVector {
 }
 
 // Set 设置指定索引位置的状态
-func (bv *BitVector) Set(index uint, state bool) {
+func (bv *BitVector) Set(index uint, state bool) error {
 	if index >= bv.size {
-		panic("index out of range")
+		return fmt.Errorf("index out of range")
 	}
 	// 计算位所在的word索引和bit位置
 	word := index / 64
@@ -43,17 +45,18 @@ func (bv *BitVector) Set(index uint, state bool) {
 	} else {
 		bv.bits[word] &= ^(1 << bit)
 	}
+	return nil
 }
 
 // Get 获取指定索引位置的位的状态
-func (bv *BitVector) Get(index uint) bool {
+func (bv *BitVector) Get(index uint) (bool, error) {
 	if index >= bv.size {
-		panic("index out of range")
+		return false, fmt.Errorf("index out of range")
 	}
 	// 计算位所在的word索引和bit位置
 	word := index / 64
 	bit := index % 64
-	return (bv.bits[word] & (1 << bit)) != 0
+	return (bv.bits[word] & (1 << bit)) != 0, nil
 }
 
 func (bv *BitVector) Size() uint {
@@ -71,7 +74,7 @@ func (bv *BitVector) Load(dataBuffer []byte) {
 				break
 			}
 			bit := (b >> i) & 1
-			bv.Set(bitIndex, bit == 1)
+			_ = bv.Set(bitIndex, bit == 1)
 			bitIndex++
 		}
 	}
@@ -80,7 +83,8 @@ func (bv *BitVector) Load(dataBuffer []byte) {
 func (bv *BitVector) ToString() string {
 	str := make([]byte, bv.size)
 	for i := uint(0); i < bv.size; i++ {
-		if bv.Get(i) {
+		b, _ := bv.Get(i)
+		if b {
 			str[i] = '1'
 		} else {
 			str[i] = '0'
@@ -94,7 +98,8 @@ func (bv *BitVector) ToBytes() []byte {
 	data := make([]byte, numBytes)
 
 	for i := uint(0); i < bv.size; i++ {
-		if bv.Get(i) {
+		b, _ := bv.Get(i)
+		if b {
 			byteIndex := i / 8
 			bitInByte := i % 8
 			data[byteIndex] |= 1 << bitInByte
