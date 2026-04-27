@@ -52,10 +52,12 @@ func (t *TCPClient) Send(requestData []byte, dataReader func(conn net.Conn) erro
 	}
 	// 发送数据
 	if _, err = t.conn.Write(requestData); err != nil {
+		_ = t.close()
 		return
 	}
 	err = dataReader(t.conn)
 	if err != nil {
+		_ = t.close()
 		t.drain()
 		return
 	}
@@ -102,6 +104,9 @@ func (t *TCPClient) close() (err error) {
 // flush 清空当前连接中阻塞无效的数据
 func (t *TCPClient) drain() {
 	//time.Now().Add(500 * time.Microsecond)
+	if t.conn == nil {
+		return
+	}
 	if err := t.conn.SetReadDeadline(time.Now().Add(500 * time.Microsecond)); err != nil {
 		return
 	}
@@ -136,9 +141,9 @@ func (t *TCPClient) closeIdle() {
 	if t.IdleTimeout <= 0 {
 		return
 	}
-	idle := time.Now().Sub(t.lastActivity)
+	idle := time.Since(t.lastActivity)
 	if idle >= t.IdleTimeout {
-		slog.Info("tcp client: closing connection due to idle timeout: %v", idle)
+		slog.Info("tcp client: closing connection due to idle timeout", "idle time", idle)
 		_ = t.close()
 	}
 }

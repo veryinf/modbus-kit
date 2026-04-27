@@ -2,7 +2,10 @@ module github.com/veryinf/modbus-kit
 
 go 1.25
 
-require github.com/panjf2000/gnet/v2 v2.9.5
+require (
+	github.com/goburrow/serial v0.1.0
+	github.com/panjf2000/gnet/v2 v2.9.5
+)
 
 require (
 	github.com/panjf2000/ants/v2 v2.11.3 // indirect

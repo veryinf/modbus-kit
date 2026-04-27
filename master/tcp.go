@@ -1,12 +1,9 @@
-// Copyright 2014 Quoc-Viet Nguyen. All rights reserved.
-// This software may be modified and distributed under the terms
-// of the BSD license. See the LICENSE file for details.
-
 package master
 
 import (
-	"github.com/veryinf/modbus-kit/common"
 	"net"
+
+	"github.com/veryinf/modbus-kit/common"
 )
 
 // NewModbusTCPMasterWithAddress 使用默认处理程序创建 TcpClient

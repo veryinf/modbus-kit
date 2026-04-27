@@ -63,19 +63,37 @@ func (bv *BitVector) Size() uint {
 	return bv.size
 }
 
-func (bv *BitVector) Load(dataBuffer []byte) {
+// Load 从字节数组加载数据到位向量
+// 参数:
+//
+// dataBuffer - 字节数组
+// bigEndian - 是否使用大端序，true 为大端序，false 为小端序
+func (bv *BitVector) Load(dataBuffer []byte, bigEndian bool) {
 	bitIndex := uint(0)
 	for _, b := range dataBuffer {
 		if bitIndex >= bv.size {
 			break
 		}
-		for i := uint(0); i < 8; i++ {
-			if bitIndex >= bv.size {
-				break
+		if bigEndian {
+			// 大端序：从最高位开始
+			for i := uint(0); i < 8; i++ {
+				if bitIndex >= bv.size {
+					break
+				}
+				bit := (b >> (7 - i)) & 1
+				_ = bv.Set(bitIndex, bit == 1)
+				bitIndex++
 			}
-			bit := (b >> i) & 1
-			_ = bv.Set(bitIndex, bit == 1)
-			bitIndex++
+		} else {
+			// 小端序：从最低位开始
+			for i := uint(0); i < 8; i++ {
+				if bitIndex >= bv.size {
+					break
+				}
+				bit := (b >> i) & 1
+				_ = bv.Set(bitIndex, bit == 1)
+				bitIndex++
+			}
 		}
 	}
 }

@@ -46,7 +46,7 @@ func (c *ModbusMaster) ReadCoils(slaveId byte, address uint16, quantity uint16) 
 		return
 	}
 	bitVector = common.NewBitVector(uint(quantity))
-	bitVector.Load(response.Data[1:])
+	bitVector.Load(response.Data[1:], false)
 	return
 }
 
@@ -80,7 +80,7 @@ func (c *ModbusMaster) ReadDiscreteInputs(slaveId byte, address uint16, quantity
 		return
 	}
 	bitVector = common.NewBitVector(uint(quantity))
-	bitVector.Load(response.Data[1:])
+	bitVector.Load(response.Data[1:], false)
 	return
 }
 
@@ -295,7 +295,7 @@ func (c *ModbusMaster) WriteMultipleRegisters(slaveId byte, address uint16, regi
 		err = fmt.Errorf("modbus: quantity '%v' is out of range [1, 123]", quantity)
 		return
 	}
-	value := *common.RegistersToBytes(registers)
+	value := common.RegistersToBytes(registers)
 	request := &common.ProtocolDataUnit{FunctionCode: common.FuncCodeWriteMultipleRegisters}
 	request.LoadData(address, uint16(quantity)).Append(byte(len(value))).Append(value...)
 	response, err := c.send(slaveId, request)
